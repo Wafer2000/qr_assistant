@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354550793280",
+    "project_id": "qr-assistant-f26b4",
+    "storage_bucket": "qr-assistant-f26b4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354550793280:android:502b424941cfe25ec2cba5",
+        "android_client_info": {
+          "package_name": "com.example.qr_assistant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQztSb8Gi0G_Eou3Q6I-K-DVIESsiLd_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
