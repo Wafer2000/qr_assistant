@@ -3,7 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/my_drawer.dart';
+import 'package:qr_assistant/tools/my_drawer.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/guard/extra_data_estudiante.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
@@ -46,7 +46,7 @@ class _ProfileEstudianteState extends State<ProfileEstudiante> {
         body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('Users')
-              .doc(_pref.ultimateUid)
+              .doc(_pref.uid)
               .snapshots(),
           builder: (context, snapshot) {
             String imageUrl = '';

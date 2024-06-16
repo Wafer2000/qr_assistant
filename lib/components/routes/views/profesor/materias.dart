@@ -1,13 +1,14 @@
-// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously, unused_element, avoid_print, unnecessary_new
+// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously, unused_element, avoid_print, unnecessary_new, unnecessary_null_comparison
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_drawer.dart';
+import 'package:qr_assistant/components/routes/views/scanner.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_drawer.dart';
 import 'package:qr_assistant/components/routes/views/profesor/edit_materia.dart';
 import 'package:qr_assistant/components/routes/views/profesor/list_class.dart';
 import 'package:qr_assistant/components/routes/views/profesor/new_materia.dart';
@@ -41,7 +42,12 @@ class _MateriasState extends State<Materias> {
     super.dispose();
   }
 
-  void _inasistenciasfile(materiaid, materia) {
+  void _inasistenciasfile(materiaId, materia) {
+    List<QueryDocumentSnapshot>? service;
+
+    final now = DateTime.now();
+    final String fhoy = DateFormat('dd-MM-yyyy').format(now);
+
     showDialog(
         context: context,
         builder: (context) {
@@ -59,123 +65,176 @@ class _MateriasState extends State<Materias> {
             backgroundColor: Theme.of(context).colorScheme.background,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('Inasistencias')
-                    .orderBy('fllegada', descending: true)
-                    .where('materiaId', isEqualTo: materiaid)
-                    .where('docente', isEqualTo: _pref.ultimateUid)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  final service = snapshot.data?.docs;
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('Materias'
+                            '$materiaId'
+                            'Asistencias')
+                        .orderBy('fllegada', descending: false)
+                        .where('asistencia', isEqualTo: 'Llego Tarde')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      final service = snapshot.data?.docs;
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    );
-                  }
-                  if (snapshot.data == null) {
-                    return Scaffold(
-                      backgroundColor: Theme.of(context).colorScheme.background,
-                      body: const Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Center(
-                              child: Text(
-                                'No hay Datos',
-                                style: TextStyle(fontSize: 30),
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        );
+                      }
+                      if (snapshot.data == null) {
+                        return const Center(
+                          child: Text(
+                            'No hay Datos',
+                            style: TextStyle(fontSize: 30),
+                          ),
+                        );
+                      }
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: const <DataColumn>[
+                            DataColumn(
+                              label: Text(
+                                'ID',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return Scaffold(
-                    backgroundColor: Colors.transparent,
-                    body: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columns: const <DataColumn>[
-                                DataColumn(
-                                  label: Text(
-                                    'ID',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                            DataColumn(
+                              label: Text(
+                                'Nombres y Apellidos',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                DataColumn(
-                                  label: Text(
-                                    'Nombres y Apellidos',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: Text(
-                                    'Codigo Institucional',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: Text(
-                                    'Fecha',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: Text(
-                                    'Hora',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              rows: service!.asMap().entries.map((entry) {
-                                Map<String, dynamic> data =
-                                    entry.value.data() as Map<String, dynamic>;
-                                String docId = entry.value.id;
-                                return DataRow(
-                                  cells: <DataCell>[
-                                    DataCell(Text('${entry.key + 1}')),
-                                    DataCell(Text(
-                                        '${data['nombres']} ${data['apellidos']}')),
-                                    DataCell(Text('${data['cinstitucional']}')),
-                                    DataCell(Text('${data['fllegada']}')),
-                                    DataCell(Text('${data['hllegada']}')),
-                                  ],
-                                );
-                              }).toList(),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            DataColumn(
+                              label: Text(
+                                'Codigo Institucional',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Fecha',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Hora',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                          rows: service!.asMap().entries.map((entry) {
+                            Map<String, dynamic> data =
+                                entry.value.data() as Map<String, dynamic>;
+                            //String docId = entry.value.id;
+                            return DataRow(
+                              cells: <DataCell>[
+                                DataCell(Text('${entry.key + 1}')),
+                                DataCell(Text(
+                                    '${data['nombres']} ${data['apellidos']}')),
+                                DataCell(Text('${data['cinstitucional']}')),
+                                DataCell(Text('${data['fllegada']}')),
+                                DataCell(Text('${data['hllegada']}')),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    }),
+                ElevatedButton(
+                  onPressed: () async {
+                    final DocumentSnapshot materiaSnapshot =
+                        await FirebaseFirestore.instance
+                            .collection('Materias${_pref.uid}')
+                            .doc(materiaId)
+                            .get();
+                    final DocumentSnapshot docenteSnapshot =
+                        await FirebaseFirestore.instance
+                            .collection('Users')
+                            .doc(_pref.uid)
+                            .get();
+
+                    if (service != null) {
+                      final csvData = [
+                        'ASISTENCIA',
+                        'Materia: ${materiaSnapshot['materia'].replaceAll(',', ',')}',
+                        'Docente: ${docenteSnapshot['nombres']} ${docenteSnapshot['apellidos'].replaceAll(',', ',')}',
+                        'Nº,Nombres y Apellidos,Codigo Instucional,Fecha de Llegada,Hora de Llegada',
+                        ...service!.asMap().entries.map((entry) {
+                          Map<String, dynamic> data =
+                              entry.value.data() as Map<String, dynamic>;
+                          return [
+                            '${entry.key + 1}',
+                            '${data['nombres'].replaceAll(',', ',')} ${data['apellidos'].replaceAll(',', ',')}',
+                            '${data['cinstitucional'].replaceAll(',', ',')}',
+                            '${data['fllegada'].replaceAll(',', ',')}',
+                            '${data['hllegada'].replaceAll(',', ',')}',
+                          ].join(',');
+                        }),
+                      ].join('\n');
+
+                      final now = DateTime.now();
+                      final hcreacion = DateFormat('HH:mm:ss').format(now);
+                      final fcreacion = DateFormat('dd-MM-yyyy').format(now);
+
+                      final directory = await getExternalStorageDirectory();
+                      final appDocumentsDir = Directory(
+                          '${directory!.path}/Documents/Asistencias_QrAssistant');
+                      if (!appDocumentsDir.existsSync()) {
+                        appDocumentsDir.createSync(recursive: true);
+                      }
+                      final file = File(
+                          '${appDocumentsDir.path}/Asistencias_${hcreacion}_${fcreacion}_${materiaSnapshot['materia']}.csv');
+                      await file.writeAsString(csvData);
+
+                      Navigator.of(context).pop();
+                      LoadingScreen().hide();
+                      displayMessageToUser(
+                          'CSV file saved to ${file.path}', context);
+                      print(file.path);
+                    } else {
+                      Navigator.of(context).pop();
+                      LoadingScreen().hide();
+                      displayMessageToUser('No data to export', context);
+                    }
+                  },
+                  child: Text(
+                    'Exportar a CSV',
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? MyColor.black().color
+                          : MyColor.white().color,
                     ),
-                  );
-                }),
+                  ),
+                ),
+              ],
+            ),
           );
         });
   }
 
-  void asistencias(materia) {
+  void asistencias(materiaId) {
     List<QueryDocumentSnapshot>? service;
 
     showDialog(
@@ -201,7 +260,7 @@ class _MateriasState extends State<Materias> {
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('Materias'
-                        '$materia'
+                        '$materiaId'
                         'Asistencias')
                     .orderBy('fllegada', descending: false)
                     .snapshots(),
@@ -295,21 +354,21 @@ class _MateriasState extends State<Materias> {
                 onPressed: () async {
                   final DocumentSnapshot materiaSnapshot =
                       await FirebaseFirestore.instance
-                          .collection('Materias${_pref.ultimateUid}')
-                          .doc(materia)
+                          .collection('Materias${_pref.uid}')
+                          .doc(materiaId)
                           .get();
                   final DocumentSnapshot docenteSnapshot =
                       await FirebaseFirestore.instance
                           .collection('Users')
-                          .doc(_pref.ultimateUid)
+                          .doc(_pref.uid)
                           .get();
 
                   if (service != null) {
                     final csvData = [
-                      'ASISTENCIA', // título adicional que no se repite
-                      'Materia: ${materiaSnapshot['materia'].replaceAll(',', ',')}', // título adicional que no se repite
-                      'Docente: ${docenteSnapshot['nombres']} ${docenteSnapshot['apellidos'].replaceAll(',', ',')}', // título adicional que no se repite
-                      'Nº,Nombres y Apellidos,Codigo Instucional,Fecha de Llegada,Hora de Llegada', // títulos de columna
+                      'ASISTENCIA',
+                      'Materia: ${materiaSnapshot['materia'].replaceAll(',', ',')}',
+                      'Docente: ${docenteSnapshot['nombres']} ${docenteSnapshot['apellidos'].replaceAll(',', ',')}',
+                      'Nº,Nombres y Apellidos,Codigo Instucional,Fecha de Llegada,Hora de Llegada',
                       ...service!.asMap().entries.map((entry) {
                         Map<String, dynamic> data =
                             entry.value.data() as Map<String, dynamic>;
@@ -349,7 +408,7 @@ class _MateriasState extends State<Materias> {
                   }
                 },
                 child: Text(
-                  'Export to CSV',
+                  'Exportar a CSV',
                   style: TextStyle(
                     color: Theme.of(context).brightness == Brightness.light
                         ? MyColor.black().color
@@ -434,7 +493,7 @@ class _MateriasState extends State<Materias> {
                         LoadingScreen().show(context);
 
                         await FirebaseFirestore.instance
-                            .collection('Materias${_pref.ultimateUid}'
+                            .collection('Materias${_pref.uid}'
                                 '$materia'
                                 'Asistencias')
                             .get()
@@ -467,7 +526,7 @@ class _MateriasState extends State<Materias> {
                         }
 
                         await FirebaseFirestore.instance
-                            .collection('Materias${_pref.ultimateUid}')
+                            .collection('Materias${_pref.uid}')
                             .doc(materia)
                             .delete();
 
@@ -488,10 +547,13 @@ class _MateriasState extends State<Materias> {
   }
 
   String text = "";
+  int count = 0;
+  int countpro = 0;
   final db = FirebaseFirestore.instance;
   final WriteBatch batch = FirebaseFirestore.instance.batch();
 
-  void createData(List excel, String materia, WriteBatch batch) async {
+  void createDataGene(List excel, String materia, WriteBatch batch) async {
+    count++;
     batch.set(db.collection('Estudiantes').doc('${excel[1]}'), {
       'cinstitucional': '${excel[1]}',
       'nombres': '${excel[2]}',
@@ -504,9 +566,50 @@ class _MateriasState extends State<Materias> {
     });
   }
 
-  void updateData(List excel, String materia, WriteBatch batch) async {
-    batch.update(
-        db.collection('Estudiantes').doc('${excel[1]}'), {materia: true});
+  void updateDataGene(List excel, String materia, WriteBatch batch) async {
+    final DocumentSnapshot studentSnapshot = await FirebaseFirestore.instance
+        .collection('Estudiantes')
+        .doc('${excel[1]}')
+        .get();
+    final DocumentSnapshot studentproSnapshot = await FirebaseFirestore.instance
+        .collection('Estudiantes$materia')
+        .doc('${excel[1]}')
+        .get();
+    if (studentSnapshot[materia] != true) {
+      count++;
+      batch.update(
+          db.collection('Estudiantes').doc('${excel[1]}'), {materia: true});
+    }
+    if (studentSnapshot['cedula'] != '' && !studentproSnapshot.exists) {
+      batch.set(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
+        'cinstitucional': '${excel[1]}',
+        'nombres': '${excel[2]}',
+        'apellidos': '${excel[3]}',
+        'nprograma': '${excel[4]}',
+        'programa': '${excel[5]}',
+        'correo': '${excel[6]}',
+        'cedula': studentSnapshot['cedula'],
+        materia: true
+      });
+    } else if (studentSnapshot['cedula'] != '' && studentproSnapshot.exists) {
+      batch.update(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
+        'cedula': studentSnapshot['cedula'],
+      });
+    }
+  }
+
+  void createDataProf(List excel, String materia, WriteBatch batch) async {
+    countpro++;
+    batch.set(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
+      'cinstitucional': '${excel[1]}',
+      'nombres': '${excel[2]}',
+      'apellidos': '${excel[3]}',
+      'nprograma': '${excel[4]}',
+      'programa': '${excel[5]}',
+      'correo': '${excel[6]}',
+      'cedula': '',
+      materia: true
+    });
   }
 
   void _openfile(materia) async {
@@ -552,25 +655,66 @@ class _MateriasState extends State<Materias> {
             .collection('Estudiantes')
             .doc('${row[1]}')
             .get();
+        final DocumentSnapshot studentprofSnapshot = await FirebaseFirestore
+            .instance
+            .collection('Estudiantes$materia')
+            .doc('${row[1]}')
+            .get();
         if (!studentSnapshot.exists) {
-          row[1] == "id" ? print("") : createData(row, materia, batch);
+          row[1] == "id" ? print("") : createDataGene(row, materia, batch);
         } else {
-          row[1] == "id" ? print("") : updateData(row, materia, batch);
+          row[1] == "id" ? print("") : updateDataGene(row, materia, batch);
+        }
+        if (!studentprofSnapshot.exists) {
+          row[1] == "id" ? print("") : createDataProf(row, materia, batch);
         }
       }
 
       // Commit the batch after adding all the documents for the current file
       await batch.commit();
     }
+    final int fcount = count - 1;
+    print(fcount);
+    final DocumentSnapshot materiaSnapshot = await FirebaseFirestore.instance
+        .collection('Materias${_pref.uid}')
+        .doc(materia)
+        .get();
+    if (!materiaSnapshot.exists) {
+      await FirebaseFirestore.instance
+          .collection('Materias${_pref.uid}')
+          .doc(materia)
+          .update({
+        'numStu': fcount,
+      });
+    } else if (fcount > 0 && materiaSnapshot.exists) {
+      if (materiaSnapshot['numStu'] != fcount) {
+        await FirebaseFirestore.instance
+            .collection('Materias${_pref.uid}')
+            .doc(materia)
+            .update({
+          'numStu': materiaSnapshot['numStu'] + fcount,
+        });
+      }
+    } else if (fcount < 0 && materiaSnapshot.exists) {
+      if (materiaSnapshot['numStu'] != fcount) {
+        await FirebaseFirestore.instance
+            .collection('Materias${_pref.uid}')
+            .doc(materia)
+            .update({
+          'numStu': materiaSnapshot['numStu'] + fcount,
+        });
+      }
+    }
     LoadingScreen().hide();
     displayMessageToUser('Se han subido los estudiantes', context);
+    count = 0;
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('Materias${_pref.ultimateUid}')
+            .collection('Materias${_pref.uid}')
             .snapshots(),
         builder: (context, snapshot) {
           final service = snapshot.data?.docs;
@@ -618,6 +762,7 @@ class _MateriasState extends State<Materias> {
               ),
             );
           }
+
           return Scaffold(
             appBar: AppBar(
               elevation: 0,
@@ -645,6 +790,29 @@ class _MateriasState extends State<Materias> {
                 Map<String, dynamic> data =
                     document.data() as Map<String, dynamic>;
                 String docID = document.id;
+
+                final now = DateTime.now();
+                final fhoy = DateFormat('dd/MM/yyyy').format(now);
+
+                final inicioDateTime = data['inicio'];
+
+                bool isCMDGreaterThanHLlegada(String cMD, String hLlegada) {
+                  DateTime cMDDateTime = DateFormat("hh:mm a").parse(cMD);
+                  DateTime hLlegadaDateTime =
+                      DateFormat("hh:mm a").parse(hLlegada);
+                  return cMDDateTime.isAfter(hLlegadaDateTime);
+                }
+
+                DateTime cincuentaMinutosDespues = DateFormat("hh:mm a")
+                    .parse(inicioDateTime)
+                    .add(const Duration(minutes: 50));
+
+                final String cMD =
+                    DateFormat('hh:mm a').format(cincuentaMinutosDespues);
+
+                final String hllegada = DateFormat('hh:mm a').format(now);
+
+                bool isQMDGreater = isCMDGreaterThanHLlegada(cMD, hllegada);
 
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
@@ -810,7 +978,6 @@ class _MateriasState extends State<Materias> {
                                   ],
                                 ),
                               ),
-
                               const SizedBox(
                                 height: 10,
                               ),
@@ -866,96 +1033,118 @@ class _MateriasState extends State<Materias> {
                                     ? MyColor.black().color
                                     : MyColor.white()
                                         .color, // The color of the divider
-                              ), // The color of the divider
-
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.list_sharp),
-                                    onPressed: () {
-                                      asistencias(docID);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Asistencias',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      _pref.subjectId = docID;
-                                      Navigator.pushNamed(
-                                          context, EditMateria.routname);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Editar',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.group),
-                                    onPressed: () {
-                                      _pref.listId = docID;
-                                      Navigator.pushNamed(
-                                          context, ListClass.routname);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Estudiantes',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () {
-                                      delete_Materia(docID);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Borrar',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.file_upload),
-                                    onPressed: () {
-                                      _openfile(docID);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Subir',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.cancel),
-                                    onPressed: () {
-                                      _inasistenciasfile(
-                                          docID, data['materia']);
-                                    },
-                                    iconSize: 35,
-                                    tooltip: 'Subir',
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? MyColor.black().color
-                                        : MyColor.naturalGray().color,
-                                    alignment: Alignment.center,
-                                  ),
-                                ],
+                              ),
+                              /*if (fhoy == data['proxClass'] && !isQMDGreater)
+                                Center(
+                                  child: Text('Llego tarde'),
+                                ),
+                              if (fhoy == data['proxClass'] && isQMDGreater)*/
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.list_sharp),
+                                      onPressed: () {
+                                        asistencias(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Asistencias',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () {
+                                        _pref.subjectId = docID;
+                                        Navigator.pushNamed(
+                                            context, EditMateria.routname);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Editar',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.group),
+                                      onPressed: () {
+                                        _pref.listId = docID;
+                                        Navigator.pushNamed(
+                                            context, ListClass.routname);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Estudiantes',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        delete_Materia(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Borrar',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.file_upload),
+                                      onPressed: () {
+                                        _openfile(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Subir',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.cancel),
+                                      onPressed: () {
+                                        _inasistenciasfile(
+                                            docID, data['materia']);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Subir',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.qr_code_scanner),
+                                      onPressed: () {
+                                        _pref.listId = docID;
+                                        Navigator.pushNamed(
+                                            context, Scanner.routname);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Subir',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

@@ -33,7 +33,7 @@ class _InputFotoPerfilState extends State<InputFotoPerfil> {
   Future _getImageUrl() async {
     final DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
         .collection('Users')
-        .doc(_pref.ultimateUid)
+        .doc(_pref.uid)
         .get();
 
     setState(() {
@@ -49,7 +49,7 @@ class _InputFotoPerfilState extends State<InputFotoPerfil> {
   Future uploadFile() async {
     setState(() {});
 
-    final path = 'Fotos de Perfil/${_pref.ultimateUid}/Foto de Perfil';
+    final path = 'Fotos de Perfil/${_pref.uid}/Foto de Perfil';
     final file = File(_pickedFile!.path!);
     final ref = FirebaseStorage.instance.ref().child(path);
 
@@ -66,7 +66,7 @@ class _InputFotoPerfilState extends State<InputFotoPerfil> {
 
     if (urlDowload != null) {
       final result =
-          _firestore.collection('Users').doc(_pref.ultimateUid).update({
+          _firestore.collection('Users').doc(_pref.uid).update({
         'fperfil': urlDowload,
       });
 
@@ -115,12 +115,12 @@ class _InputFotoPerfilState extends State<InputFotoPerfil> {
   }
 
   Future<void> _deleteImage() async {
-    final path = 'Fotos de Perfil/${_pref.ultimateUid}/Foto de Perfil';
+    final path = 'Fotos de Perfil/${_pref.uid}/Foto de Perfil';
     final ref = FirebaseStorage.instance.ref().child(path);
     await ref.delete();
 
     final firestore = FirebaseFirestore.instance;
-    await firestore.collection('Users').doc(_pref.ultimateUid).update({
+    await firestore.collection('Users').doc(_pref.uid).update({
       'fperfil': '',
     });
 

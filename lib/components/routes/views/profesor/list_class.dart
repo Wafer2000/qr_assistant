@@ -3,9 +3,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
 
@@ -237,8 +237,16 @@ class _ListClassState extends State<ListClass> {
                                   .collection('Estudiantes')
                                   .doc(student)
                                   .update({
-                                'cedula': cedulaController.text,
                                 'cinstitucional': cinstitucionalController.text,
+                                'cedula': cedulaController.text,
+                              });
+                              await FirebaseFirestore.instance
+                                  .collection(
+                                      'Estudiantes${_pref.ultimateTipe}')
+                                  .doc(student)
+                                  .set({
+                                'cinstitucional': cinstitucionalController.text,
+                                'cedula': cedulaController.text,
                               });
                             }
                             cinstitucionalController.clear();
@@ -406,7 +414,7 @@ class _ListClassState extends State<ListClass> {
                   IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: () {
-                      new_student();
+                      //new_student();
                     },
                     tooltip: 'Add',
                     alignment: Alignment.center,

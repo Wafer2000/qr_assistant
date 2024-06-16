@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_button.dart';
-import 'package:qr_assistant/components/routes/tools/my_drawer.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_button.dart';
+import 'package:qr_assistant/tools/my_drawer.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -58,7 +58,7 @@ class _HomeState extends State<Home> {
                   children: [
                     StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                       stream: FirebaseFirestore.instance
-                          .collection('Materias${pref.ultimateUid}')
+                          .collection('Materias${pref.uid}')
                           .snapshots(),
                       builder: (BuildContext context,
                           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
@@ -191,7 +191,7 @@ class _HomeState extends State<Home> {
 
                           final DocumentSnapshot materiaSnapshot =
                               await FirebaseFirestore.instance
-                                  .collection('Materias${pref.ultimateUid}')
+                                  .collection('Materias${pref.uid}')
                                   .doc(materiaIdController.text)
                                   .get();
                           String asistencia = materiaSnapshot['inicio'];
@@ -215,7 +215,7 @@ class _HomeState extends State<Home> {
                           if (quinceMinutosDespues.isAfter(now)) {
                             // quinceMinutosDespues is after hllegada
                             await FirebaseFirestore.instance
-                                .collection('Materias${pref.ultimateUid}')
+                                .collection('Materias${pref.uid}')
                                 .doc(materiaIdController.text)
                                 .collection('Asistencias')
                                 .doc()
@@ -231,7 +231,7 @@ class _HomeState extends State<Home> {
                           } else {
                             // quinceMinutosDespues is before or equal to hllegada
                             await FirebaseFirestore.instance
-                                .collection('Materias${pref.ultimateUid}')
+                                .collection('Materias${pref.uid}')
                                 .doc(materiaIdController.text)
                                 .collection('Asistencias')
                                 .doc()
@@ -294,7 +294,7 @@ class _HomeState extends State<Home> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width - 3,
                   child: QrImageView(
-                    data: pref.ultimateUid,
+                    data: pref.uid,
                     size: MediaQuery.of(context).size.width - 3,
                   ),
                 ),

@@ -1,7 +1,11 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously, unused_element
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/my_drawer.dart';
+import 'package:qr_assistant/components/routes/log/login.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
 import 'package:qr_assistant/components/routes/views/administrador/guard/extra_data_admi.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
@@ -22,28 +26,31 @@ class _ProfileAdmiState extends State<ProfileAdmi> {
     super.initState();
   }
 
+  Future<void> _signOut() async {
+    var pref = PreferencesUser();
+    LoadingScreen().show(context);
+
+    try {
+      await FirebaseAuth.instance.signOut();
+      pref.uid = '';
+      LoadingScreen().hide();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Login()),
+      );
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: const Center(child: Text('Perfil')),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, ExtraDataAdmi.routname);
-                },
-                icon: const Icon(Icons.edit))
-          ],
-          backgroundColor: Theme.of(context).brightness == Brightness.light
-                  ? MyColor.jungleGreen().color
-                  : MyColor.spectra().color,
-        ),
         backgroundColor: Theme.of(context).colorScheme.background,
         body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('Users')
-              .doc(_pref.ultimateUid)
+              .doc(_pref.uid)
               .snapshots(),
           builder: (context, snapshot) {
             String imageUrl = '';
@@ -96,6 +103,7 @@ class _ProfileAdmiState extends State<ProfileAdmi> {
                         borderRadius: BorderRadius.circular(200),
                         child: Image.network(
                           user['fperfil'] == '' ? imageUrl : user['fperfil'],
+                          fit: BoxFit.cover,
                           width: 250,
                           height: 250,
                           errorBuilder: (context, error, stackTrace) {
@@ -173,6 +181,59 @@ class _ProfileAdmiState extends State<ProfileAdmi> {
                           Text(
                             '${user['sexo']}',
                             style: const TextStyle(fontSize: 20),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Sexo: ',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20),
+                          ),
+                          Text(
+                            '${user['sexo']}',
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 40,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B897F),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: TextButton(
+                              onPressed: () {
+                                _signOut();
+                              },
+                              child: const Text('Cerrar Sesion',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ),
+                          Container(
+                            width: 100,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFBD5E3B),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, ExtraDataAdmi.routname);
+                              },
+                              child: const Text('Editar Perfil',
+                                  style: TextStyle(color: Colors.white)),
+                            ),
                           ),
                         ],
                       ),

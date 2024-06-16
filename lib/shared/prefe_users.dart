@@ -14,12 +14,12 @@ class PreferencesUser {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  String get ultimateUid {
-    return _prefs.getString('ultimateUid') ?? '';
+  String get uid {
+    return _prefs.getString('uid') ?? '';
   }
 
-  set ultimateUid(String value) {
-    _prefs.setString('ultimateUid', value);
+  set uid(String value) {
+    _prefs.setString('uid', value);
   }
 
   String get ultimateTipe {
@@ -44,5 +44,13 @@ class PreferencesUser {
 
   set subjectId(String value) {
     _prefs.setString('subjectId', value);
+  }
+
+  String get photoPerfil {
+    return _prefs.getString('photoPerfil') ?? '';
+  }
+
+  set photoPerfil(String value) {
+    _prefs.setString('photoPerfil', value);
   }
 }

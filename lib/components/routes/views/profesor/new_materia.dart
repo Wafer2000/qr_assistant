@@ -3,9 +3,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
 
@@ -28,25 +29,23 @@ class _NewMateriaState extends State<NewMateria> {
   bool _miercoles = false;
   bool _jueves = false;
   bool _viernes = false;
+  bool _sabado = false;
+  bool _domingo = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: const Center(child: Text('Materias')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-            },
-            tooltip: 'Add',
-            alignment: Alignment.center,
+        title: const Center(child: Text('Crear Materias')),
+        actions: const [
+          SizedBox(
+            width: 56,
           ),
         ],
         backgroundColor: Theme.of(context).brightness == Brightness.light
-                  ? MyColor.jungleGreen().color
-                  : MyColor.spectra().color,
+            ? MyColor.jungleGreen().color
+            : MyColor.spectra().color,
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
       body: Padding(
@@ -91,7 +90,8 @@ class _NewMateriaState extends State<NewMateria> {
                           },
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor: _lunes ? Colors.blue : Colors.grey,
+                            backgroundColor:
+                                _lunes ? MyColor.deYork().color : Colors.grey,
                             child: const Text('L',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),
@@ -106,7 +106,7 @@ class _NewMateriaState extends State<NewMateria> {
                           child: CircleAvatar(
                             radius: 20,
                             backgroundColor:
-                                _martes ? Colors.blue : Colors.grey,
+                                _martes ? MyColor.deYork().color : Colors.grey,
                             child: const Text('Ma',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),
@@ -120,8 +120,9 @@ class _NewMateriaState extends State<NewMateria> {
                           },
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor:
-                                _miercoles ? Colors.blue : Colors.grey,
+                            backgroundColor: _miercoles
+                                ? MyColor.deYork().color
+                                : Colors.grey,
                             child: const Text('Mi',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),
@@ -136,7 +137,7 @@ class _NewMateriaState extends State<NewMateria> {
                           child: CircleAvatar(
                             radius: 20,
                             backgroundColor:
-                                _jueves ? Colors.blue : Colors.grey,
+                                _jueves ? MyColor.deYork().color : Colors.grey,
                             child: const Text('J',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),
@@ -151,8 +152,38 @@ class _NewMateriaState extends State<NewMateria> {
                           child: CircleAvatar(
                             radius: 20,
                             backgroundColor:
-                                _viernes ? Colors.blue : Colors.grey,
+                                _viernes ? MyColor.deYork().color : Colors.grey,
                             child: const Text('V',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _sabado = !_sabado;
+                            });
+                          },
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor:
+                                _sabado ? MyColor.deYork().color : Colors.grey,
+                            child: const Text('S',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _domingo = !_domingo;
+                            });
+                          },
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor:
+                                _domingo ? MyColor.deYork().color : Colors.grey,
+                            child: const Text('D',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold)),
                           ),
@@ -235,7 +266,7 @@ class _NewMateriaState extends State<NewMateria> {
                 obscureText: false,
               ),
               const SizedBox(
-                height: 10,
+                height: 40,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -290,17 +321,46 @@ class _NewMateriaState extends State<NewMateria> {
                           final DocumentSnapshot documentSnapshot =
                               await FirebaseFirestore.instance
                                   .collection('Users')
-                                  .doc(_pref.ultimateUid)
+                                  .doc(_pref.uid)
                                   .get();
 
                           String name = documentSnapshot['nombres'];
                           String apellidos = documentSnapshot['apellidos'];
 
+                          DateTime proximoDiaClase = now;
+                          List<int> diasSeleccionados = [];
+
+                          if (_lunes) diasSeleccionados.add(DateTime.monday);
+                          if (_martes) diasSeleccionados.add(DateTime.tuesday);
+                          if (_miercoles) {
+                            diasSeleccionados.add(DateTime.wednesday);
+                          }
+                          if (_jueves) diasSeleccionados.add(DateTime.thursday);
+                          if (_viernes) diasSeleccionados.add(DateTime.friday);
+                          if (_sabado) diasSeleccionados.add(DateTime.saturday);
+                          if (_domingo) diasSeleccionados.add(DateTime.sunday);
+
+                          while (true) {
+                            bool encontrado = false;
+                            for (int dia in diasSeleccionados) {
+                              if (proximoDiaClase.weekday == dia) {
+                                encontrado = true;
+                                break;
+                              }
+                            }
+                            if (encontrado) break;
+                            proximoDiaClase =
+                                proximoDiaClase.add(const Duration(days: 1));
+                          }
+
+                          String proxClass =
+                              DateFormat('dd/MM/yyyy').format(proximoDiaClase);
+
                           await FirebaseFirestore.instance
-                              .collection('Materias${_pref.ultimateUid}')
+                              .collection('Materias${_pref.uid}')
                               .doc()
                               .set({
-                            'profesor': _pref.ultimateUid,
+                            'profesor': _pref.uid,
                             'nombres': name,
                             'apellidos': apellidos,
                             'materia': materiaController.text,
@@ -309,6 +369,10 @@ class _NewMateriaState extends State<NewMateria> {
                             '3': _miercoles,
                             '4': _jueves,
                             '5': _viernes,
+                            '6': _sabado,
+                            '7': _domingo,
+                            'numStu': 0,
+                            'proxClass': proxClass,
                             'inicio': inicioController.text,
                             'salida': salidaController.text,
                             'fcreacion': hcreacion,
@@ -320,8 +384,7 @@ class _NewMateriaState extends State<NewMateria> {
                         inicioController.clear();
                         salidaController.clear();
                         LoadingScreen().hide();
-                        Navigator.pop(context);
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, Materias.routname);
                       },
                       child: const Text('Guardar',
                           style: TextStyle(color: Colors.white)),

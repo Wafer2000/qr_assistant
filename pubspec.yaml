@@ -58,6 +58,7 @@ dependencies:
   spreadsheet_decoder: ^2.2.0
   path_provider: ^2.0.2
   permission_handler: ^8.1.4
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:

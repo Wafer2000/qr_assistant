@@ -4,10 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_assistant/components/routes/log/login.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_button.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_button.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/guard/extra_data_estudiante.dart';
 import 'package:qr_assistant/components/routes/views/profesor/guard/extra_data_profesor.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
@@ -94,7 +94,7 @@ class _RegisterState extends State<Register> {
                 email: emailController.text, password: passwordController.text);
 
         var uid = userCredential.user?.uid;
-        pref.ultimateUid = uid!;
+        pref.uid = uid!;
         FirebaseFirestore.instance.collection('Users').doc(uid).set({
           'uid': uid,
           'nombres': firstnameController.text,
@@ -173,7 +173,7 @@ class _RegisterState extends State<Register> {
                 email: emailController.text, password: passwordController.text);
 
         var uid = userCredential.user?.uid;
-        pref.ultimateUid = uid!;
+        pref.uid = uid!;
         FirebaseFirestore.instance.collection('Users').doc(uid).set({
           'uid': uid,
           'nombres': firstnameController.text,
@@ -187,7 +187,7 @@ class _RegisterState extends State<Register> {
           'sexo': '',
         });
         LoadingScreen().hide();
-        if (pref.ultimateUid == uid) {
+        if (pref.uid == uid) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const ExtraDataProfesor()),

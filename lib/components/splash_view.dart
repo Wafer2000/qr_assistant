@@ -1,11 +1,15 @@
-// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously, await_only_futures
+// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously, await_only_futures, non_constant_identifier_names
 
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:qr_assistant/components/routes/log/login.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/components/routes/views/administrador/home_admi.dart';
 import 'package:qr_assistant/components/routes/views/home.dart';
-import 'package:qr_assistant/components/routes/views/home_uni.dart';
+import 'package:qr_assistant/components/routes/views/scanner.dart';
+import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 
 class SplashView extends StatefulWidget {
@@ -20,15 +24,29 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    PreferencesUser prefs = PreferencesUser();
+    Redirect();
+  }
+
+  Future<void> Redirect() async {
+    PreferencesUser pref = PreferencesUser();
     Future.delayed(Duration(milliseconds: (6720).round()), () async {
-      final uid = await prefs.ultimateUid;
+      final uid = await pref.uid;
       if (uid != null && uid != '') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) {
-            return const HomeUni();
-          }),
-        );
+        final DocumentSnapshot tipeSnapshot =
+            await FirebaseFirestore.instance.collection('Users').doc(uid).get();
+        pref.ultimateTipe = tipeSnapshot['tipo'];
+        LoadingScreen().hide();
+        if (pref.ultimateTipe == 'Profesor') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Materias()),
+          );
+        } else if (pref.ultimateTipe == 'Administrador') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeAdmi()),
+          );
+        }
       } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) {

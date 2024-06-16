@@ -7,10 +7,11 @@ import 'package:qr_assistant/components/routes/log/register.dart';
 import 'package:qr_assistant/components/routes/log/register_uni.dart';
 import 'package:qr_assistant/components/routes/views/administrador/guard/extra_data_admi.dart';
 import 'package:qr_assistant/components/routes/views/administrador/home_admi.dart';
+import 'package:qr_assistant/components/routes/views/administrador/services/ausencias.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/guard/extra_data_estudiante.dart';
 import 'package:qr_assistant/components/routes/views/home.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/profile_estudiante.dart';
-import 'package:qr_assistant/components/routes/views/home_uni.dart';
+import 'package:qr_assistant/components/routes/views/scanner.dart';
 import 'package:qr_assistant/components/routes/views/profesor/edit_materia.dart';
 import 'package:qr_assistant/components/routes/views/profesor/list_class.dart';
 import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
@@ -39,11 +40,12 @@ class _RoutesState extends State<Routes> {
       routes: {
         Home.routname: (context) => const Home(),
         Login.routname: (context) => const Login(),
-        HomeUni.routname: (context) => const HomeUni(),
+        Scanner.routname: (context) => const Scanner(),
         HomeAdmi.routname: (context) => const HomeAdmi(),
         Register.routname: (context) => const Register(),
         Materias.routname: (context) => const Materias(),
         ListClass.routname: (context) => const ListClass(),
+        Ausencias.routname: (context) => const Ausencias(),
         NewMateria.routname: (context) => const NewMateria(),
         SplashView.routname: (context) => const SplashView(),
         RegisterUni.routname: (context) => const RegisterUni(),

@@ -3,15 +3,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:qr_assistant/components/routes/log/register.dart';
 import 'package:qr_assistant/components/routes/log/register_uni.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_button.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_button.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/components/routes/views/administrador/home_admi.dart';
-import 'package:qr_assistant/components/routes/views/home.dart';
-import 'package:qr_assistant/components/routes/views/home_uni.dart';
 import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 
@@ -37,7 +34,7 @@ class _LoginState extends State<Login> {
               email: emailController.text, password: passwordController.text);
       if (context.mounted) {
         var uid = userCredential.user?.uid;
-        pref.ultimateUid = uid!;
+        pref.uid = uid!;
 
         final DocumentSnapshot tipeSnapshot =
             await FirebaseFirestore.instance.collection('Users').doc(uid).get();

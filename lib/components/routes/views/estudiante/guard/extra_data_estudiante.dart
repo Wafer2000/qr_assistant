@@ -6,11 +6,11 @@ import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/input_photo.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_button.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/input_photo.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_button.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/components/routes/views/home.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
@@ -33,7 +33,7 @@ class _ExtraDataEstudianteState extends State<ExtraDataEstudiante> {
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('Users')
-            .doc(_pref.ultimateUid)
+            .doc(_pref.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -105,7 +105,7 @@ class _ExtraDataEstudianteState extends State<ExtraDataEstudiante> {
               try {
                 FirebaseFirestore.instance
                     .collection('Users')
-                    .doc(_pref.ultimateUid)
+                    .doc(_pref.uid)
                     .update({
                   'fnacimiento': ageController.text,
                   'cinstitucional': codeController.text,

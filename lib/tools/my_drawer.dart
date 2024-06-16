@@ -3,10 +3,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_assistant/components/routes/log/login.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
 import 'package:qr_assistant/components/routes/views/home.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/profile_estudiante.dart';
-import 'package:qr_assistant/components/routes/views/home_uni.dart';
+import 'package:qr_assistant/components/routes/views/scanner.dart';
 import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
 import 'package:qr_assistant/components/routes/views/profesor/profile_profesor.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
@@ -31,7 +31,7 @@ class _MyDrawerState extends State<MyDrawer> {
 
     try {
       await FirebaseAuth.instance.signOut();
-      pref.ultimateUid = '';
+      pref.uid = '';
       LoadingScreen().hide();
       Navigator.pushReplacement(
         context,
@@ -50,6 +50,9 @@ class _MyDrawerState extends State<MyDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+final dayOfWeek = now.weekday;
+print(dayOfWeek);
     return Drawer(
       backgroundColor: Theme.of(context).colorScheme.background,
       child: Column(
@@ -63,7 +66,7 @@ class _MyDrawerState extends State<MyDrawer> {
                   fit: BoxFit.cover,
                 ),
               ),
-              Padding(
+              /*Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
                   leading: Icon(
@@ -73,10 +76,10 @@ class _MyDrawerState extends State<MyDrawer> {
                   title: const Text('E S C A N E R'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, HomeUni.routname);
+                    Navigator.pushNamed(context, Scanner.routname);
                   },
                 ),
-              ),
+              ),*/
               if (pref.ultimateTipe == 'Estudiante')
                 Padding(
                   padding: const EdgeInsets.only(left: 25.0),

@@ -3,9 +3,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:qr_assistant/components/routes/tools/helper_functions.dart';
-import 'package:qr_assistant/components/routes/tools/loading_indicator.dart';
-import 'package:qr_assistant/components/routes/tools/my_textfield.dart';
+import 'package:qr_assistant/components/routes/views/profesor/materias.dart';
+import 'package:qr_assistant/tools/helper_functions.dart';
+import 'package:qr_assistant/tools/loading_indicator.dart';
+import 'package:qr_assistant/tools/my_textfield.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
 
@@ -36,7 +37,7 @@ class _EditMateriaState extends State<EditMateria> {
 
   Future<void> Materia() async {
     final DocumentSnapshot materiaSnapshot = await FirebaseFirestore.instance
-        .collection('Materias${_pref.ultimateUid}')
+        .collection('Materias${_pref.uid}')
         .doc(_pref.subjectId)
         .get();
 
@@ -70,14 +71,9 @@ class _EditMateriaState extends State<EditMateria> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: const Center(child: Text('Materias')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-            tooltip: 'Add',
-            alignment: Alignment.center,
-          ),
+        title: const Center(child: Text('Editar Materias')),
+        actions: const [
+          SizedBox(width: 56,),
         ],
         backgroundColor: Theme.of(context).brightness == Brightness.light
             ? MyColor.jungleGreen().color
@@ -287,7 +283,7 @@ class _EditMateriaState extends State<EditMateria> {
                         materiaController.clear();
                         inicioController.clear();
                         salidaController.clear();
-                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, Materias.routname, (route) => false);
                       },
                       child: const Text('Cancelar',
                           style: TextStyle(color: Colors.white)),
@@ -324,17 +320,17 @@ class _EditMateriaState extends State<EditMateria> {
                           final DocumentSnapshot documentSnapshot =
                               await FirebaseFirestore.instance
                                   .collection('Users')
-                                  .doc(_pref.ultimateUid)
+                                  .doc(_pref.uid)
                                   .get();
 
                           String name = documentSnapshot['nombres'];
                           String apellidos = documentSnapshot['apellidos'];
 
                           await FirebaseFirestore.instance
-                              .collection('Materias${_pref.ultimateUid}')
+                              .collection('Materias${_pref.uid}')
                               .doc(_pref.subjectId)
                               .set({
-                            'profesor': _pref.ultimateUid,
+                            'profesor': _pref.uid,
                             'nombres': name,
                             'apellidos': apellidos,
                             'materia': materiaController.text,
@@ -354,8 +350,7 @@ class _EditMateriaState extends State<EditMateria> {
                         inicioController.clear();
                         salidaController.clear();
                         LoadingScreen().hide();
-                        Navigator.pop(context);
-                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, Materias.routname, (route) => false);
                       },
                       child: const Text('Guardar',
                           style: TextStyle(color: Colors.white)),
