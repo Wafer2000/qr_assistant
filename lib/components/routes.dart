@@ -8,6 +8,7 @@ import 'package:qr_assistant/components/routes/log/register_uni.dart';
 import 'package:qr_assistant/components/routes/views/administrador/guard/extra_data_admi.dart';
 import 'package:qr_assistant/components/routes/views/administrador/home_admi.dart';
 import 'package:qr_assistant/components/routes/views/administrador/services/ausencias.dart';
+import 'package:qr_assistant/components/routes/views/administrador/services/num_inasistencias.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/guard/extra_data_estudiante.dart';
 import 'package:qr_assistant/components/routes/views/home.dart';
 import 'package:qr_assistant/components/routes/views/estudiante/profile_estudiante.dart';
@@ -52,6 +53,7 @@ class _RoutesState extends State<Routes> {
         EditMateria.routname: (context) => const EditMateria(),
         ExtraDataAdmi.routname: (context) => const ExtraDataAdmi(),
         ProfileProfesor.routname: (context) => const ProfileProfesor(),
+        NumInasistencias.routname: (context) => const NumInasistencias(),
         ProfileEstudiante.routname: (context) => const ProfileEstudiante(),
         ExtraDataProfesor.routname: (context) => const ExtraDataProfesor(),
         ExtraDataEstudiante.routname: (context) => const ExtraDataEstudiante(),

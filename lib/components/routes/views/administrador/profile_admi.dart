@@ -97,7 +97,7 @@ class _ProfileAdmiState extends State<ProfileAdmi> {
                   Column(
                     children: [
                       const SizedBox(
-                        height: 25,
+                        height: 50,
                       ),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(200),
@@ -169,20 +169,6 @@ class _ProfileAdmiState extends State<ProfileAdmi> {
                       ),
                       const SizedBox(
                         height: 5,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Sexo: ',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
-                          ),
-                          Text(
-                            '${user['sexo']}',
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        ],
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

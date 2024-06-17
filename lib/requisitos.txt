@@ -3,8 +3,8 @@ Se necesitan los siguientes reportes con opcion para ser descargados en  pdf/csv
 -Reporte de asistencias por asignatura/docente, ver el modelo de la universidad para el formato de asistencia.(Hecho)
 -Reporte de ausencias de estudiantes, debe ordenarse en orden descendente, debe tener el nombre de la asignatura, el nombre del docente, el nombre de los estudiantes con sus respectivas inasistencias.(Hecho)
 -Una alerta debe ser enviada via correo electronico del docente y del coordinador y via la app cuando el estudiante tenga 3 inasistencias, 4, 5.
--Reporte de docentes que no asistieron a clases en el horario asignado (nombre docente, fecha inasistencia, asignatura, facultad).
--Reporte de inasistencias docentes en lo que va del semestre (nombre docente, cantidad inasistencias, asignatura, facultad)
+-Reporte de docentes que no asistieron a clases en el horario asignado (nombre docente, fecha inasistencia, asignatura, facultad).(Hecho)
+-Reporte de inasistencias docentes en lo que va del semestre (nombre docente, cantidad inasistencias, asignatura, facultad).(Hecho)
 
 NOTA: 
 -Recordar que la asistencia solo se puede tomar en el dia/hora establecido de la asignatura.

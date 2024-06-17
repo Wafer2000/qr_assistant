@@ -12,15 +12,15 @@ import 'package:qr_assistant/style/global_colors.dart';
 import 'package:qr_assistant/tools/helper_functions.dart';
 import 'package:qr_assistant/tools/loading_indicator.dart';
 
-class Ausencias extends StatefulWidget {
-  static const String routname = '/ausencias';
-  const Ausencias({super.key});
+class NumInasistencias extends StatefulWidget {
+  static const String routname = '/num_inasistencias';
+  const NumInasistencias({super.key});
 
   @override
-  State<Ausencias> createState() => _AusenciasState();
+  State<NumInasistencias> createState() => _AusenciasState();
 }
 
-class _AusenciasState extends State<Ausencias> {
+class _AusenciasState extends State<NumInasistencias> {
   final _pref = PreferencesUser();
   int selectedIndex = 1;
   String imageUrl = '';
@@ -31,9 +31,9 @@ class _AusenciasState extends State<Ausencias> {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection("AsistenciasProfesores")
-            .orderBy('hasistencia', descending: false)
-            .where('asistencia', isEqualTo: 'Llego Tarde')
+            .collection("Historial-FTP-Profesor")
+            .orderBy('ultiasis', descending: false)
+            .where('fallo', isGreaterThan: 0)
             .snapshots(),
         builder: (context, snapshot) {
           final service = snapshot.data?.docs;
@@ -82,9 +82,9 @@ class _AusenciasState extends State<Ausencias> {
                       if (service != null) {
                         int rowNumber1 = 0;
                         final csvData = [
-                          'INASISTENCIAS',
+                          'CONTEO DE INASISTENCIAS',
                           'Coordinador: ${docenteSnapshot['nombres']} ${docenteSnapshot['apellidos'].replaceAll(',', ',')}',
-                          'Nº,Nombres y Apellidos,Fecha de Inasistencia,Asignatura,Facultad',
+                          'Nº,Docente,Nº de Inasistencias,Asignatura,Facultad',
                           ...service.asMap().entries.where((entry) {
                             Map<String, dynamic> data =
                                 entry.value.data() as Map<String, dynamic>;
@@ -95,10 +95,10 @@ class _AusenciasState extends State<Ausencias> {
                             rowNumber1++;
                             return [
                               '$rowNumber1',
-                              '${data['nombres'].replaceAll(',', ',')} ${data['apellidos'].replaceAll(',', ',')}',
-                              '${data['fasistencia'].replaceAll(',', ',')}',
+                              '${data['docenteName'].replaceAll(',', ',')} ${data['docenteLast'].replaceAll(',', ',')}',
+                              '${data['fallo'].replaceAll(',', ',')}',
                               '${data['materia'].replaceAll(',', ',')}',
-                              '${data['facultad'].replaceAll(',', ',')}',
+                              '${data['programa'].replaceAll(',', ',')}',
                             ].join(',');
                           }),
                         ].join('\n');
@@ -115,7 +115,7 @@ class _AusenciasState extends State<Ausencias> {
                         }
 
                         final file = File(
-                            '${appDocumentsDir.path}/Inasistencias_${hcreacion}_$fcreacion.csv');
+                            '${appDocumentsDir.path}/Numero_Inasistencias_${hcreacion}_$fcreacion.csv');
                         await file.writeAsString(csvData, encoding: utf8);
 
                         Navigator.of(context).pop();
@@ -162,7 +162,7 @@ class _AusenciasState extends State<Ausencias> {
                         ),
                         DataColumn(
                           label: Text(
-                            'Fecha de Inasistencia',
+                            'Nº de Inasistencia',
                             style: TextStyle(
                               fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.bold,
@@ -196,10 +196,10 @@ class _AusenciasState extends State<Ausencias> {
                           cells: <DataCell>[
                             DataCell(Text('${entry.key + 1}')),
                             DataCell(Text(
-                                '${data['nombres']} ${data['apellidos']}')),
-                            DataCell(Text('${data['fasistencia']}')),
+                                '${data['docenteName']} ${data['docenteLast']}')),
+                            DataCell(Text('${data['fallo']}')),
                             DataCell(Text('${data['materia']}')),
-                            DataCell(Text('${data['facultad']}')),
+                            DataCell(Text('${data['programa']}')),
                           ],
                         );
                       }).toList(),

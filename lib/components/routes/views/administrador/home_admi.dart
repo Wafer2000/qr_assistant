@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_assistant/components/routes/views/administrador/profile_admi.dart';
 import 'package:qr_assistant/components/routes/views/administrador/services/ausencias.dart';
+import 'package:qr_assistant/components/routes/views/administrador/services/num_inasistencias.dart';
 import 'package:qr_assistant/shared/prefe_users.dart';
 import 'package:qr_assistant/style/global_colors.dart';
 
@@ -26,6 +27,7 @@ class _HomeAdmiState extends State<HomeAdmi> {
     final screens = [
       const Ausencias(),
       const ProfileAdmi(),
+      const NumInasistencias(),
     ];
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
@@ -102,7 +104,15 @@ class _HomeAdmiState extends State<HomeAdmi> {
                       Theme.of(context).brightness == Brightness.light
                           ? MyColor.jungleGreen().color
                           : MyColor.spectra().color,
-                )
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.remove_circle),
+                  label: 'Nº Insistencias',
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.light
+                          ? MyColor.jungleGreen().color
+                          : MyColor.spectra().color,
+                ),
               ],
             ),
           );

@@ -84,16 +84,24 @@ class _HomeUniState extends State<Scanner> {
           .parse(asistencia)
           .add(const Duration(minutes: 15));
 
+      DateTime cincuentaMinutosDespues = DateFormat("hh:mm a")
+          .parse(asistencia)
+          .add(const Duration(minutes: 15));
+
       final now = DateTime.now();
 
       int weekday = now.weekday;
 
       final String qMD = DateFormat('hh:mm a').format(quinceMinutosDespues);
 
+      final String cMD = DateFormat('hh:mm a').format(cincuentaMinutosDespues);
+
       final String hllegada = DateFormat('hh:mm a').format(now);
       final String fhoy = DateFormat('dd-MM-yyyy').format(now);
 
       bool isQMDGreater = isQMDGreaterThanHLlegada(qMD, hllegada);
+
+      bool isCMDGreater = isQMDGreaterThanHLlegada(cMD, hllegada);
 
       if (materiaSnapshot[weekday.toString()]) {
         if (now.isBefore(inicioClase)) {
@@ -121,28 +129,65 @@ class _HomeUniState extends State<Scanner> {
 
             String nombres = _data['nombres'];
             String apellidos = _data['apellidos'];
-            String correo = _data['correo'];
             String programa = _data['programa'];
-            String cedula = _data['cedula'];
             String cinstitucional = _data['cinstitucional'];
 
+            final DocumentSnapshot saveDocu = await FirebaseFirestore.instance
+                .collection('AsistenciasProfesores')
+                .doc('${fhoy}${pref.uid}')
+                .get();
+
             if (_data.containsKey(pref.listId)) {
-              if (isQMDGreater) {
+              if (isQMDGreater && isCMDGreater) {
+                final String fllegada = DateFormat('dd/MM/yyyy').format(now);
+                final String hllegada = DateFormat('hh:mm a').format(now);
+
                 final DocumentSnapshot asistenciaSnapshot =
                     await FirebaseFirestore.instance
-                        .collection('Materias${pref.listId}Asistencias')
+                        .collection('MateriasAsistencias')
                         .doc('${fhoy}${cinstitucional}')
                         .get();
+                final DocumentSnapshot asistenciaCountSnapshot =
+                    await FirebaseFirestore.instance
+                        .collection('Historial-FTP-Estudiante')
+                        .doc('$cinstitucional${pref.listId}')
+                        .get();
                 if (asistenciaSnapshot.exists) {
-                  FirebaseFirestore.instance
-                      .collection('Materias${pref.listId}Asistencias')
-                      .doc('${fhoy}${cinstitucional}')
-                      .update({
-                    fhoy: true,
-                  });
+                  if (asistenciaSnapshot[fhoy] == false) {
+                    await FirebaseFirestore.instance
+                        .collection('MateriasAsistencias')
+                        .doc('${fhoy}${cinstitucional}')
+                        .update({
+                      fhoy: true,
+                      'hllegada': hllegada,
+                      'asistencia': 'Llego a Tiempo'
+                    });
+                    if (asistenciaCountSnapshot.exists) {
+                      int puntual = asistenciaCountSnapshot['puntual'] + 1;
+                      int fallo = asistenciaCountSnapshot['fallo'] - 1;
+                      if (asistenciaCountSnapshot[fhoy] == false) {
+                        await FirebaseFirestore.instance
+                            .collection('Historial-FTP-Estudiante')
+                            .doc('$cinstitucional${pref.listId}')
+                            .update({
+                          'puntual': puntual,
+                        });
+                        if (fllegada == asistenciaCountSnapshot['ultiasis']) {
+                          await FirebaseFirestore.instance
+                              .collection('Historial-FTP-Estudiante')
+                              .doc('$cinstitucional${pref.listId}')
+                              .update({
+                            'fallo': fallo,
+                          });
+                        }
+                      }
+                    }
+                  }
                 } else {
                   Future<void> uploadData(
-                    DocumentReference docRef,
+                    DocumentReference docRef1,
+                    DocumentReference docRef2,
+                    DocumentReference docRef3,
                     String cInstitucional,
                     String nombres,
                     String apellidos,
@@ -150,26 +195,58 @@ class _HomeUniState extends State<Scanner> {
                     String cedula,
                     String programa,
                   ) async {
-                    final doc = await docRef.get();
+                    final doc1 = await docRef1.get();
+                    final doc2 = await docRef2.get();
+                    final doc3 = await docRef3.get();
 
-                    if (!doc.exists) {
+                    if (!doc1.exists) {
                       final String fllegada =
                           DateFormat('dd/MM/yyyy').format(now);
                       if (cInstitucional != cinstitucional) {
-                        await docRef.set({
+                        await docRef1.set({
                           'nombres': nombres,
                           'apellidos': apellidos,
                           'cinstitucional': cInstitucional,
                           'correo': correo,
                           'cedula': cedula,
                           'programa': programa,
-                          'hllegada': hllegada,
+                          'hllegada': '',
                           'fllegada': fllegada,
-                          'asistencia': 'Llego a Tiempo',
+                          'asistencia': 'No LLego',
+                          'materia': pref.listId,
                           fhoy: false,
                         });
+                        if (!doc2.exists) {
+                          await docRef2.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'nombres': nombres,
+                            'apellidos': apellidos,
+                            'cinstitucional': cinstitucional,
+                            'tarde': 0,
+                            'fallo': 1,
+                            'puntual': 0,
+                            'correo': correo,
+                            'cedula': cedula,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: false,
+                          });
+                        } else {
+                          int fallo2 = doc2['fallo'] + 1;
+                          if (doc2['ultiasis'] != hllegada) {
+                            await docRef2.update({
+                              'fallo': fallo2,
+                            });
+                          } else {
+                            displayMessageToUser('Ya tomo asistencia', context);
+                          }
+                        }
                       } else if (cInstitucional == cinstitucional) {
-                        await docRef.set({
+                        await docRef1.set({
                           'nombres': nombres,
                           'apellidos': apellidos,
                           'cinstitucional': cInstitucional,
@@ -179,22 +256,101 @@ class _HomeUniState extends State<Scanner> {
                           'hllegada': hllegada,
                           'fllegada': fllegada,
                           'asistencia': 'Llego a Tiempo',
+                          'materia': pref.listId,
                           fhoy: true,
                         });
-                        await FirebaseFirestore.instance
-                            .collection('AsistenciasProfesores')
-                            .doc('${fhoy}${pref.uid}')
-                            .set({
-                          'docenteId': pref.uid,
-                          'nombres': profeSnapshot['nombres'],
-                          'apellidos': profeSnapshot['apellidos'],
-                          'ateriaId': pref.listId,
-                          'ateria': materiaSnapshot['materia'],
-                          'facultad': programa,
-                          'fasistencia': fllegada,
-                          'asistencia': 'Llego a Tiempo',
-                          fhoy: true,
-                        });
+                        if (!doc2.exists) {
+                          await docRef2.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'nombres': nombres,
+                            'apellidos': apellidos,
+                            'cinstitucional': cinstitucional,
+                            'tarde': 0,
+                            'fallo': 0,
+                            'puntual': 1,
+                            'correo': correo,
+                            'cedula': cedula,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true
+                          });
+                        } else {
+                          int puntual2 = doc2['puntual'] + 1;
+                          if (doc2['ultiasis'] != hllegada) {
+                            await docRef2.update({
+                              'puntual': puntual2,
+                            });
+                          } else {
+                            displayMessageToUser('Ya tomo asistencia', context);
+                          }
+                        }
+                        if (doc3.exists) {
+                          final puntual3 = doc3['puntual'] + 1;
+                          if (doc3['ultiasis']) {
+                            await docRef3.update({
+                              'puntual': puntual3,
+                            });
+
+                            displayMessageToUser('Asistencia Añadida', context);
+
+                            await docRef3.set({
+                              'docenteId': pref.uid,
+                              'nombres': profeSnapshot['nombres'],
+                              'apellidos': profeSnapshot['apellidos'],
+                              'materiaId': pref.listId,
+                              'materia': materiaSnapshot['materia'],
+                              'facultad': programa,
+                              'hasistencia': hllegada,
+                              'fasistencia': fllegada,
+                              'asistencia': 'Llego a Tiempo',
+                              fhoy: true,
+                            });
+                          }
+
+                          setState(() {
+                            codigoIns = '';
+                          });
+                          LoadingScreen().hide();
+                        } else if (!doc3.exists) {
+                          await docRef3.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'fallo': 0,
+                            'tarde': 0,
+                            'puntual': 1,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true
+                          });
+
+                          displayMessageToUser('Asistencia Añadida', context);
+
+                          setState(() {
+                            codigoIns = '';
+                          });
+                          LoadingScreen().hide();
+
+                          await docRef3.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'fallo': 0,
+                            'tarde': 0,
+                            'puntual': 1,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true,
+                          });
+                        }
                       }
                     }
                   }
@@ -208,12 +364,20 @@ class _HomeUniState extends State<Scanner> {
                     final programa = document.get('programa');
                     final cinstitucional = document.get('cinstitucional');
 
-                    final docRef = FirebaseFirestore.instance
-                        .collection('Materias${pref.listId}Asistencias')
+                    final docRef1 = FirebaseFirestore.instance
+                        .collection('MateriasAsistencias')
                         .doc('${fhoy}${cInstitucional}');
 
-                    await uploadData(docRef, cinstitucional, nombres, apellidos,
-                        correo, cedula, programa);
+                    final docRef2 = FirebaseFirestore.instance
+                        .collection('Historial-FTP-Estudiante')
+                        .doc('$cInstitucional${pref.listId}');
+
+                    final docRef3 = FirebaseFirestore.instance
+                        .collection('Historial-FTP-Profesor')
+                        .doc('${pref.uid}${pref.listId}');
+
+                    await uploadData(docRef1, docRef2, docRef3, cinstitucional,
+                        nombres, apellidos, correo, cedula, programa);
                   });
                 }
 
@@ -223,23 +387,56 @@ class _HomeUniState extends State<Scanner> {
                   codigoIns = '';
                 });
                 LoadingScreen().hide();
-              } else if (!isQMDGreater) {
+              } else if (!isQMDGreater && isCMDGreater) {
                 final String fllegada = DateFormat('dd/MM/yyyy').format(now);
+                final String hllegada = DateFormat('hh:mm a').format(now);
+
                 final DocumentSnapshot asistenciaSnapshot =
                     await FirebaseFirestore.instance
-                        .collection('Materias${pref.listId}Asistencias')
+                        .collection('MateriasAsistencias')
                         .doc('${fhoy}$cinstitucional')
                         .get();
+                final DocumentSnapshot asistenciaCountSnapshot =
+                    await FirebaseFirestore.instance
+                        .collection('Historial-FTP-Estudiante')
+                        .doc('$cinstitucional${pref.listId}')
+                        .get();
                 if (asistenciaSnapshot.exists) {
-                  FirebaseFirestore.instance
-                      .collection('Materias${pref.listId}Asistencias')
-                      .doc('${fhoy}${cinstitucional}')
-                      .update({
-                    fhoy: true,
-                  });
+                  if (asistenciaSnapshot[fhoy] == false) {
+                    FirebaseFirestore.instance
+                        .collection('MateriasAsistencias')
+                        .doc('${fhoy}${cinstitucional}')
+                        .update({
+                      fhoy: true,
+                      'hllegada': hllegada,
+                      'asistencia': 'Llego Tarde'
+                    });
+                    if (asistenciaCountSnapshot.exists) {
+                      int tarde = asistenciaCountSnapshot['tarde'] + 1;
+                      int fallo = asistenciaCountSnapshot['fallo'] - 1;
+                      if (asistenciaCountSnapshot[fhoy] == false) {
+                        await FirebaseFirestore.instance
+                            .collection('Historial-FTP-Estudiante')
+                            .doc('$cinstitucional${pref.listId}')
+                            .update({
+                          'tarde': tarde,
+                        });
+                        if (fllegada == asistenciaCountSnapshot['ultiasis']) {
+                          await FirebaseFirestore.instance
+                              .collection('Historial-FTP-Estudiante')
+                              .doc('$cinstitucional${pref.listId}')
+                              .update({
+                            'fallo': fallo,
+                          });
+                        }
+                      }
+                    }
+                  }
                 } else {
                   Future<void> uploadData(
-                    DocumentReference docRef,
+                    DocumentReference docRef1,
+                    DocumentReference docRef2,
+                    DocumentReference docRef3,
                     String cInstitucional,
                     String nombres,
                     String apellidos,
@@ -247,26 +444,58 @@ class _HomeUniState extends State<Scanner> {
                     String cedula,
                     String programa,
                   ) async {
-                    final doc = await docRef.get();
+                    final doc1 = await docRef1.get();
+                    final doc2 = await docRef2.get();
+                    final doc3 = await docRef3.get();
 
-                    if (!doc.exists) {
+                    if (!doc1.exists) {
                       final String fllegada =
                           DateFormat('dd/MM/yyyy').format(now);
                       if (cInstitucional != cinstitucional) {
-                        await docRef.set({
+                        await docRef1.set({
                           'nombres': nombres,
                           'apellidos': apellidos,
                           'cinstitucional': cInstitucional,
                           'correo': correo,
                           'cedula': cedula,
                           'programa': programa,
-                          'hllegada': hllegada,
+                          'hllegada': '',
                           'fllegada': fllegada,
-                          'asistencia': 'Llego Tarde',
+                          'asistencia': 'No LLego',
+                          'materia': pref.listId,
                           fhoy: false,
                         });
+                        if (!doc2.exists) {
+                          await docRef2.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'nombres': nombres,
+                            'apellidos': apellidos,
+                            'cinstitucional': cinstitucional,
+                            'tarde': 0,
+                            'fallo': 1,
+                            'puntual': 0,
+                            'correo': correo,
+                            'cedula': cedula,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: false,
+                          });
+                        } else {
+                          int fallo2 = doc2['fallo'] + 1;
+                          if (doc2['ultiasis'] != hllegada) {
+                            await docRef2.update({
+                              'fallo': fallo2,
+                            });
+                          } else {
+                            displayMessageToUser('Ya tomo asistencia', context);
+                          }
+                        }
                       } else if (cInstitucional == cinstitucional) {
-                        await docRef.set({
+                        await docRef1.set({
                           'nombres': nombres,
                           'apellidos': apellidos,
                           'cinstitucional': cInstitucional,
@@ -276,37 +505,102 @@ class _HomeUniState extends State<Scanner> {
                           'hllegada': hllegada,
                           'fllegada': fllegada,
                           'asistencia': 'Llego Tarde',
+                          'materia': pref.listId,
                           fhoy: true,
                         });
-                        await FirebaseFirestore.instance
-                            .collection('AsistenciasProfesores')
-                            .doc('${fhoy}${pref.uid}')
-                            .set({
-                          'docenteId': pref.uid,
-                          'nombres': profeSnapshot['nombres'],
-                          'apellidos': profeSnapshot['apellidos'],
-                          'ateriaId': pref.listId,
-                          'ateria': materiaSnapshot['materia'],
-                          'facultad': programa,
-                          'fasistencia': fllegada,
-                          'asistencia': 'Llego Tarde',
-                          fhoy: true,
-                        });
-                        
-                        await FirebaseFirestore.instance
-                            .collection('AsistenciasProfesores')
-                            .doc('${fhoy}${pref.uid}')
-                            .set({
-                          'docenteId': pref.uid,
-                          'nombres': profeSnapshot['nombres'],
-                          'apellidos': profeSnapshot['apellidos'],
-                          'ateriaId': pref.listId,
-                          'ateria': materiaSnapshot['materia'],
-                          'facultad': programa,
-                          'fasistencia': fllegada,
-                          'asistencia': 'Llego Tarde',
-                          fhoy: true,
-                        });
+                        if (!doc2.exists) {
+                          await docRef2.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'nombres': nombres,
+                            'apellidos': apellidos,
+                            'cinstitucional': cinstitucional,
+                            'tarde': 1,
+                            'fallo': 0,
+                            'puntual': 0,
+                            'correo': correo,
+                            'cedula': cedula,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true,
+                          });
+                        } else {
+                          int tarde2 = doc2['tarde'] + 1;
+                          if (doc2['ultiasis'] != hllegada) {
+                            await docRef2.update({
+                              'tarde': tarde2,
+                            });
+                          } else {
+                            displayMessageToUser('Ya tomo asistencia', context);
+                          }
+                        }
+                        if (doc3.exists) {
+                          final puntual3 = doc3['puntual'] + 1;
+                          if (doc3['ultiasis']) {
+                            await docRef3.update({
+                              'puntual': puntual3,
+                            });
+
+                            displayMessageToUser('Asistencia Añadida', context);
+
+                            await docRef3.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'fallo': 0,
+                            'tarde': 0,
+                            'puntual': 1,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                              fhoy: true,
+                            });
+                          }
+
+                          setState(() {
+                            codigoIns = '';
+                          });
+                          LoadingScreen().hide();
+                        } else if (!doc3.exists) {
+                          await docRef3.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'fallo': 0,
+                            'tarde': 0,
+                            'puntual': 1,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true,
+                          });
+
+                          displayMessageToUser('Asistencia Añadida', context);
+
+                          setState(() {
+                            codigoIns = '';
+                          });
+                          LoadingScreen().hide();
+
+                          await docRef3.set({
+                            'materia': materiaSnapshot['materia'],
+                            'materiaId': pref.listId,
+                            'docenteName': '${profeSnapshot['nombres']}',
+                            'docentelast': '${profeSnapshot['apellidos']}',
+                            'docenteId': pref.uid,
+                            'fallo': 0,
+                            'tarde': 0,
+                            'puntual': 1,
+                            'programa': programa,
+                            'ultiasis': fllegada,
+                            fhoy: true,
+                          });
+                        }
                       }
                     }
                   }
@@ -320,109 +614,123 @@ class _HomeUniState extends State<Scanner> {
                     final programa = document.get('programa');
                     final cinstitucional = document.get('cinstitucional');
 
-                    final docRef = FirebaseFirestore.instance
-                        .collection('Materias${pref.listId}Asistencias')
+                    final docRef1 = FirebaseFirestore.instance
+                        .collection('MateriasAsistencias')
                         .doc('${fhoy}${cInstitucional}');
 
-                    await uploadData(docRef, cinstitucional, nombres, apellidos,
-                        correo, cedula, programa);
+                    final docRef2 = FirebaseFirestore.instance
+                        .collection('Historial-FTP-Estudiante')
+                        .doc('$cInstitucional${pref.listId}');
+
+                    final docRef3 = FirebaseFirestore.instance
+                        .collection('Historial-FTP-Profesor')
+                        .doc('${pref.uid}${pref.listId}');
+
+                    await uploadData(docRef1, docRef2, docRef3, cinstitucional,
+                        nombres, apellidos, correo, cedula, programa);
                   });
                 }
-
-                final DocumentSnapshot inaestuSnapshot = await FirebaseFirestore
-                    .instance
-                    .collection('InasistenciasEstudiante')
-                    .doc('$cinstitucional${pref.listId}')
-                    .get();
-
-                if (inaestuSnapshot.exists) {
-                  final fallo = inaestuSnapshot['fallo'] + 1;
-                  await FirebaseFirestore.instance
-                      .collection('InasistenciasEstudiante')
-                      .doc('$cinstitucional${pref.listId}')
-                      .update({
-                    'fallo': fallo,
-                  });
-
-                  displayMessageToUser('Asistencia Añadida', context);
-
-                  setState(() {
-                    codigoIns = '';
-                  });
-                  LoadingScreen().hide();
-                } else {
-                  await FirebaseFirestore.instance
-                      .collection('InasistenciasEstudiante')
-                      .doc('$cinstitucional${pref.listId}')
-                      .set({
-                    'materia': materiaSnapshot['materia'],
-                    'materiaId': pref.listId,
-                    'docenteName': '${profeSnapshot['nombres']}',
-                    'docentelast': '${profeSnapshot['apellidos']}',
-                    'docenteId': pref.uid,
-                    'nombres': nombres,
-                    'apellidos': apellidos,
-                    'cinstitucional': cinstitucional,
-                    'fallo': 1,
-                    'correo': correo,
-                    'cedula': cedula,
-                    'programa': programa,
-                    'hllegada': hllegada,
-                    'fllegada': fllegada,
-                  });
-
-                  displayMessageToUser('Asistencia Añadida', context);
-
-                  setState(() {
-                    codigoIns = '';
-                  });
-                  LoadingScreen().hide();
-                }
-
+              } else if (!isCMDGreater) {
+                final String fllegada = DateFormat('dd/MM/yyyy').format(now);
+                final String hllegada = DateFormat('hh:mm a').format(now);
                 final DocumentSnapshot inaprofSnapshot = await FirebaseFirestore
                     .instance
-                    .collection('InasistenciasProfesor')
-                    .doc('$cinstitucional${pref.listId}')
+                    .collection('Historial-FTP-Profesor')
+                    .doc('${pref.uid}${pref.listId}')
                     .get();
 
                 if (inaprofSnapshot.exists) {
-                  final fallo = inaprofSnapshot['fallo'] + 1;
-                  await FirebaseFirestore.instance
-                      .collection('InasistenciasProfesor')
-                      .doc('${pref.uid}${pref.listId}')
-                      .update({
-                    'fallo': fallo,
-                  });
+                  if (inaprofSnapshot[fhoy] == false) {
+                    displayMessageToUser(
+                        'Ya tomaste tu asistencia antes', context);
+                    setState(() {
+                      codigoIns = '';
+                    });
+                    LoadingScreen().hide();
+                  } else {
+                    if (inaprofSnapshot.exists) {
+                      final tarde = inaprofSnapshot['tarde'] + 1;
+                      if (inaprofSnapshot['ultiasis'] == fllegada) {
+                        await FirebaseFirestore.instance
+                            .collection('Historial-FTP-Profesor')
+                            .doc('${pref.uid}${pref.listId}')
+                            .update({
+                          'tarde': tarde,
+                        });
 
-                  displayMessageToUser('Asistencia Añadida', context);
+                        displayMessageToUser('Asistencia Añadida', context);
 
-                  setState(() {
-                    codigoIns = '';
-                  });
-                  LoadingScreen().hide();
-                } else {
-                  await FirebaseFirestore.instance
-                      .collection('InasistenciasProfesor')
-                      .doc('$cinstitucional${pref.listId}')
-                      .set({
-                    'materia': materiaSnapshot['materia'],
-                    'materiaId': pref.listId,
-                    'docenteName': '${profeSnapshot['nombres']}',
-                    'docentelast': '${profeSnapshot['apellidos']}',
-                    'docenteId': pref.uid,
-                    'fallo': 1,
-                    'programa': programa,
-                    'hllegada': hllegada,
-                    'fllegada': fllegada,
-                  });
+                        await FirebaseFirestore.instance
+                            .collection('AsistenciasProfesores')
+                            .doc('${fhoy}${pref.uid}')
+                            .set({
+                          'docenteId': pref.uid,
+                          'nombres': profeSnapshot['nombres'],
+                          'apellidos': profeSnapshot['apellidos'],
+                          'materiaId': pref.listId,
+                          'materia': materiaSnapshot['materia'],
+                          'facultad': programa,
+                          'hasistencia': hllegada,
+                          'fasistencia': fllegada,
+                          'asistencia': 'Llego Tarde',
+                          fhoy: true,
+                        });
+                      }
 
-                  displayMessageToUser('Asistencia Añadida', context);
+                      setState(() {
+                        codigoIns = '';
+                      });
+                      LoadingScreen().hide();
+                    } else if (!inaprofSnapshot.exists) {
+                      await FirebaseFirestore.instance
+                          .collection('Historial-FTP-Profesor')
+                          .doc('$cinstitucional${pref.listId}')
+                          .set({
+                        'materia': materiaSnapshot['materia'],
+                        'materiaId': pref.listId,
+                        'docenteName': '${profeSnapshot['nombres']}',
+                        'docentelast': '${profeSnapshot['apellidos']}',
+                        'docenteId': pref.uid,
+                        'fallo': 0,
+                        'tarde': 1,
+                        'puntual': 0,
+                        'programa': programa,
+                        'ultiasis': fllegada,
+                        fhoy: true,
+                      });
 
-                  setState(() {
-                    codigoIns = '';
-                  });
-                  LoadingScreen().hide();
+                      displayMessageToUser('Asistencia Añadida', context);
+
+                      setState(() {
+                        codigoIns = '';
+                      });
+                      LoadingScreen().hide();
+
+                      await FirebaseFirestore.instance
+                          .collection('AsistenciasProfesores')
+                          .doc('${fhoy}${pref.uid}')
+                          .set({
+                        'docenteId': pref.uid,
+                        'nombres': profeSnapshot['nombres'],
+                        'apellidos': profeSnapshot['apellidos'],
+                        'materiaId': pref.listId,
+                        'materia': materiaSnapshot['materia'],
+                        'facultad': programa,
+                        'hasistencia': hllegada,
+                        'fasistencia': fllegada,
+                        'asistencia': 'Llego Tarde',
+                        fhoy: true,
+                      });
+                    }
+                  }
                 }
+              } else if (!isCMDGreater &&
+                  saveDocu['asistencia'] == 'Llego a Tiempo') {
+                displayMessageToUser('Ya tomaste tu asistencia antes', context);
+                setState(() {
+                  codigoIns = '';
+                });
+                LoadingScreen().hide();
               }
             } else {
               displayMessageToUser(

@@ -103,6 +103,11 @@ class _ListClassState extends State<ListClass> {
                           _pref.listId: FieldValue.delete(),
                         });
 
+                        await FirebaseFirestore.instance
+                            .collection('Estudiantes${_pref.listId}')
+                            .doc(docID)
+                            .delete();
+
                         LoadingScreen().hide();
                         Navigator.pop(context);
                         displayMessageToUser(
@@ -241,10 +246,9 @@ class _ListClassState extends State<ListClass> {
                                 'cedula': cedulaController.text,
                               });
                               await FirebaseFirestore.instance
-                                  .collection(
-                                      'Estudiantes${_pref.ultimateTipe}')
+                                  .collection('Estudiantes${_pref.listId}')
                                   .doc(student)
-                                  .set({
+                                  .update({
                                 'cinstitucional': cinstitucionalController.text,
                                 'cedula': cedulaController.text,
                               });
@@ -264,125 +268,6 @@ class _ListClassState extends State<ListClass> {
                 ],
               );
             });
-      },
-      barrierDismissible: false,
-    );
-  }
-
-  void new_student() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Llene todos los campos'),
-          icon: const Icon(Icons.book),
-          shadowColor: MyColor.naturalGray().color,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  MyTextField(
-                    labelText: 'Codigo Institucional',
-                    obscureText: false,
-                    controller: cinstitucionalController,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 5, 16, 0),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: Image.asset(
-                        'assets/profile.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Container(
-                  width: 100,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B897F),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextButton(
-                    onPressed: () {
-                      cinstitucionalController.clear();
-                      cedulaController.clear();
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancelar',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                ),
-                Container(
-                  width: 100,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFBD5E3B),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextButton(
-                    onPressed: () async {
-                      LoadingScreen().show(context);
-
-                      if (cinstitucionalController.text == '') {
-                        LoadingScreen().hide();
-                        displayMessageToUser(
-                            'Debe colocar el Codigo Institucional', context);
-                      } else {
-                        final DocumentSnapshot studentSnapshot =
-                            await FirebaseFirestore.instance
-                                .collection('Estudiantes')
-                                .doc(cinstitucionalController.text)
-                                .get();
-
-                        if (studentSnapshot.exists) {
-                          await FirebaseFirestore.instance
-                              .collection('Estudiantes')
-                              .doc(cinstitucionalController.text)
-                              .update({
-                            _pref.listId: true,
-                          });
-                          cinstitucionalController.clear();
-                          cedulaController.clear();
-                          LoadingScreen().hide();
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          displayMessageToUser('Estudiante Agregado', context);
-                        } else {
-                          cinstitucionalController.clear();
-                          cedulaController.clear();
-                          LoadingScreen().hide();
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          displayMessageToUser(
-                              'El estudiante no existe en la base de datos',
-                              context);
-                        }
-                      }
-                    },
-                    child: const Text('Guardar',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
       },
       barrierDismissible: false,
     );
@@ -409,15 +294,10 @@ class _ListClassState extends State<ListClass> {
             return Scaffold(
               appBar: AppBar(
                 elevation: 0,
-                title: const Center(child: Text('Materias')),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      //new_student();
-                    },
-                    tooltip: 'Add',
-                    alignment: Alignment.center,
+                title: const Center(child: Text('Estudiantes de La Materia')),
+                actions: const [
+                  SizedBox(
+                    width: 56,
                   ),
                 ],
                 backgroundColor:
@@ -447,15 +327,10 @@ class _ListClassState extends State<ListClass> {
               backgroundColor: Theme.of(context).brightness == Brightness.light
                   ? MyColor.jungleGreen().color
                   : MyColor.spectra().color,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    new_student();
-                  },
-                  tooltip: 'Add',
-                  alignment: Alignment.center,
-                ),
+              actions: const [
+                SizedBox(
+                  width: 56,
+                )
               ],
             ),
             backgroundColor: Theme.of(context).colorScheme.background,
