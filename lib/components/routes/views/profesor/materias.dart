@@ -356,6 +356,7 @@ class _MateriasState extends State<Materias> {
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('MateriasAsistencias')
+                      .where('materia', isEqualTo: materiaId)
                       .orderBy('hllegada', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -441,7 +442,9 @@ class _MateriasState extends State<Materias> {
                                   '${data['nombres']} ${data['apellidos']}')),
                               DataCell(Text('${data['cinstitucional']}')),
                               DataCell(Text('${data['fllegada']}')),
-                              DataCell(Text(data['hllegada']==''?'No Asistio':'${data['hllegada']}')),
+                              DataCell(Text(data['hllegada'] == ''
+                                  ? 'No Asistio'
+                                  : '${data['hllegada']}')),
                             ],
                           );
                         }).toList(),
@@ -586,7 +589,8 @@ class _MateriasState extends State<Materias> {
   final db = FirebaseFirestore.instance;
   final WriteBatch batch = FirebaseFirestore.instance.batch();
 
-  void createDataGene(List excel, String materia, WriteBatch batch) async {
+  Future<void> createDataGene(
+      List excel, String materia, WriteBatch batch) async {
     count++;
     batch.set(db.collection('Estudiantes').doc('${excel[1]}'), {
       'cinstitucional': '${excel[1]}',
@@ -600,7 +604,8 @@ class _MateriasState extends State<Materias> {
     });
   }
 
-  void updateDataGene(List excel, String materia, WriteBatch batch) async {
+  Future<void> updateDataGene(
+      List excel, String materia, WriteBatch batch) async {
     final DocumentSnapshot studentSnapshot = await FirebaseFirestore.instance
         .collection('Estudiantes')
         .doc('${excel[1]}')
@@ -610,13 +615,23 @@ class _MateriasState extends State<Materias> {
         .doc('${excel[1]}')
         .get();
     if (studentSnapshot.exists) {
-      if (studentSnapshot[materia] == false) {
-        count++;
-        batch.update(
-            db.collection('Estudiantes').doc('${excel[1]}'), {materia: true});
-      }
-    }
-    if (studentSnapshot['cedula'] != '' && !studentproSnapshot.exists) {
+      count++;
+      WriteBatch batch1 = db.batch();
+      batch1.update(
+          db.collection('Estudiantes').doc('${excel[1]}'), {materia: true});
+
+      batch1.commit().then((value) {
+        print('Batch updated successfully.');
+      });
+      WriteBatch batch2 = db.batch();
+      
+      batch2.update(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
+        'cedula': studentSnapshot['cedula'],
+      });
+      batch2.commit().then((value) {
+        print('Batch updated successfully.');
+      });
+    } else if (studentSnapshot['cedula'] != '' && studentproSnapshot.exists) {
       batch.set(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
         'cinstitucional': '${excel[1]}',
         'nombres': '${excel[2]}',
@@ -627,14 +642,11 @@ class _MateriasState extends State<Materias> {
         'cedula': studentSnapshot['cedula'],
         materia: true
       });
-    } else if (studentSnapshot['cedula'] != '' && studentproSnapshot.exists) {
-      batch.update(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
-        'cedula': studentSnapshot['cedula'],
-      });
     }
   }
 
-  void createDataProf(List excel, String materia, WriteBatch batch) async {
+  Future<void> createDataProf(
+      List excel, String materia, WriteBatch batch) async {
     countpro++;
     batch.set(db.collection('Estudiantes$materia').doc('${excel[1]}'), {
       'cinstitucional': '${excel[1]}',
@@ -884,7 +896,7 @@ class _MateriasState extends State<Materias> {
                               Padding(
                                 padding:
                                     const EdgeInsets.only(left: 10, right: 10),
-                                child: Row(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     const Row(
@@ -916,29 +928,7 @@ class _MateriasState extends State<Materias> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            '- ',
-                                            style: TextStyle(fontSize: 15),
-                                          ),
-                                        ],
-                                      ),
-                                    if (data['2'] == true)
-                                      const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
                                             'Martes ',
-                                            style: TextStyle(fontSize: 15),
-                                          ),
-                                        ],
-                                      ),
-                                    if (data['3'] == true)
-                                      const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            '- ',
                                             style: TextStyle(fontSize: 15),
                                           ),
                                         ],
@@ -960,29 +950,7 @@ class _MateriasState extends State<Materias> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            '- ',
-                                            style: TextStyle(fontSize: 15),
-                                          ),
-                                        ],
-                                      ),
-                                    if (data['4'] == true)
-                                      const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
                                             'Jueves ',
-                                            style: TextStyle(fontSize: 15),
-                                          ),
-                                        ],
-                                      ),
-                                    if (data['5'] == true)
-                                      const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            '- ',
                                             style: TextStyle(fontSize: 15),
                                           ),
                                         ],
@@ -1057,68 +1025,81 @@ class _MateriasState extends State<Materias> {
                                     : MyColor.white()
                                         .color, // The color of the divider
                               ),
-                              if (fhoy == data['proxClass'])
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.list_sharp),
-                                        onPressed: () {
-                                          asistencias(docID);
-                                        },
-                                        iconSize: 35,
-                                        tooltip: 'Asistencias',
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? MyColor.black().color
-                                            : MyColor.naturalGray().color,
-                                        alignment: Alignment.center,
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.group),
-                                        onPressed: () {
-                                          _pref.listId = docID;
-                                          Navigator.pushNamed(
-                                              context, ListClass.routname);
-                                        },
-                                        iconSize: 35,
-                                        tooltip: 'Estudiantes',
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? MyColor.black().color
-                                            : MyColor.naturalGray().color,
-                                        alignment: Alignment.center,
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.file_upload),
-                                        onPressed: () {
-                                          _openfile(docID);
-                                        },
-                                        iconSize: 35,
-                                        tooltip: 'Subir',
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? MyColor.black().color
-                                            : MyColor.naturalGray().color,
-                                        alignment: Alignment.center,
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.cancel),
-                                        onPressed: () {
-                                          _inasistenciasfile(
-                                              docID, data['materia']);
-                                        },
-                                        iconSize: 35,
-                                        tooltip: 'Ausencias',
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? MyColor.black().color
-                                            : MyColor.naturalGray().color,
-                                        alignment: Alignment.center,
-                                      ),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.list_sharp),
+                                      onPressed: () {
+                                        asistencias(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Asistencias',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.group),
+                                      onPressed: () {
+                                        _pref.listId = docID;
+                                        Navigator.pushNamed(
+                                            context, ListClass.routname);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Estudiantes',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.file_upload),
+                                      onPressed: () {
+                                        _openfile(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Subir',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.cancel),
+                                      onPressed: () {
+                                        _inasistenciasfile(
+                                            docID, data['materia']);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Ausencias',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        delete_Materia(docID);
+                                      },
+                                      iconSize: 35,
+                                      tooltip: 'Borrar',
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? MyColor.black().color
+                                          : MyColor.naturalGray().color,
+                                      alignment: Alignment.center,
+                                    ),
+                                    if (fhoy == data['proxClass'])
                                       IconButton(
                                         icon: const Icon(Icons.qr_code_scanner),
                                         onPressed: () {
@@ -1134,9 +1115,9 @@ class _MateriasState extends State<Materias> {
                                             : MyColor.naturalGray().color,
                                         alignment: Alignment.center,
                                       ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
+                              ),
                             ],
                           ),
                         ],

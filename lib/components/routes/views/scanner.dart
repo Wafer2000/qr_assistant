@@ -138,7 +138,7 @@ class _HomeUniState extends State<Scanner> {
                 .get();
 
             if (_data.containsKey(pref.listId)) {
-              if (isQMDGreater && isCMDGreater) {
+              if (isQMDGreater) {
                 final String fllegada = DateFormat('dd/MM/yyyy').format(now);
                 final String hllegada = DateFormat('hh:mm a').format(now);
 
@@ -290,7 +290,7 @@ class _HomeUniState extends State<Scanner> {
                         }
                         if (doc3.exists) {
                           final puntual3 = doc3['puntual'] + 1;
-                          if (doc3['ultiasis']) {
+                          if (doc3['ultiasis'] != hllegada) {
                             await docRef3.update({
                               'puntual': puntual3,
                             });
@@ -366,7 +366,7 @@ class _HomeUniState extends State<Scanner> {
 
                     final docRef1 = FirebaseFirestore.instance
                         .collection('MateriasAsistencias')
-                        .doc('${fhoy}${cInstitucional}');
+                        .doc('${fhoy}${cInstitucional}${pref.uid}');
 
                     final docRef2 = FirebaseFirestore.instance
                         .collection('Historial-FTP-Estudiante')
@@ -387,7 +387,7 @@ class _HomeUniState extends State<Scanner> {
                   codigoIns = '';
                 });
                 LoadingScreen().hide();
-              } else if (!isQMDGreater && isCMDGreater) {
+              } else if (!isQMDGreater) {
                 final String fllegada = DateFormat('dd/MM/yyyy').format(now);
                 final String hllegada = DateFormat('hh:mm a').format(now);
 
@@ -539,7 +539,7 @@ class _HomeUniState extends State<Scanner> {
                         }
                         if (doc3.exists) {
                           final puntual3 = doc3['puntual'] + 1;
-                          if (doc3['ultiasis']) {
+                          if (doc3['ultiasis'] != hllegada) {
                             await docRef3.update({
                               'puntual': puntual3,
                             });
@@ -547,16 +547,16 @@ class _HomeUniState extends State<Scanner> {
                             displayMessageToUser('Asistencia Añadida', context);
 
                             await docRef3.set({
-                            'materia': materiaSnapshot['materia'],
-                            'materiaId': pref.listId,
-                            'docenteName': '${profeSnapshot['nombres']}',
-                            'docentelast': '${profeSnapshot['apellidos']}',
-                            'docenteId': pref.uid,
-                            'fallo': 0,
-                            'tarde': 0,
-                            'puntual': 1,
-                            'programa': programa,
-                            'ultiasis': fllegada,
+                              'materia': materiaSnapshot['materia'],
+                              'materiaId': pref.listId,
+                              'docenteName': '${profeSnapshot['nombres']}',
+                              'docentelast': '${profeSnapshot['apellidos']}',
+                              'docenteId': pref.uid,
+                              'fallo': 0,
+                              'tarde': 0,
+                              'puntual': 1,
+                              'programa': programa,
+                              'ultiasis': fllegada,
                               fhoy: true,
                             });
                           }
@@ -616,11 +616,12 @@ class _HomeUniState extends State<Scanner> {
 
                     final docRef1 = FirebaseFirestore.instance
                         .collection('MateriasAsistencias')
-                        .doc('${fhoy}${cInstitucional}');
+                        .doc(
+                            '${fhoy}${cInstitucional}${pref.uid}${pref.listId}');
 
                     final docRef2 = FirebaseFirestore.instance
                         .collection('Historial-FTP-Estudiante')
-                        .doc('$cInstitucional${pref.listId}');
+                        .doc('${fhoy}$cInstitucional');
 
                     final docRef3 = FirebaseFirestore.instance
                         .collection('Historial-FTP-Profesor')

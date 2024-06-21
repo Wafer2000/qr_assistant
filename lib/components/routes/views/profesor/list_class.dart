@@ -228,12 +228,18 @@ class _ListClassState extends State<ListClass> {
                             LoadingScreen().show(context);
 
                             if (cedulaController.text == '') {
+                              cinstitucionalController.clear();
+                              cedulaController.clear();
                               LoadingScreen().hide();
+                              Navigator.pop(context);
                               displayMessageToUser(
                                   'Debe colocar la Cedula del Estudiante',
                                   context);
                             } else if (cinstitucionalController.text == '') {
+                              cinstitucionalController.clear();
+                              cedulaController.clear();
                               LoadingScreen().hide();
+                              Navigator.pop(context);
                               displayMessageToUser(
                                   'Debe colocar el Codigo Institucional del Estudiante',
                                   context);
@@ -258,6 +264,7 @@ class _ListClassState extends State<ListClass> {
                             LoadingScreen().hide();
                             Navigator.pop(context);
                             displayMessageToUser('Datos Actualizados', context);
+                            Navigator.pop(context);
                           },
                           child: const Text('Guardar',
                               style: TextStyle(color: Colors.white)),
